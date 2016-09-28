@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <title>UNO WiFi</title>
+      <link rel="stylesheet" href="pure.css">
+      <link rel="stylesheet" href="style.css">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script src="ui.js"></script>
+   </head>
+   <body>
+      <div id="layout">
+         <div id="spinner" class="spinner" hidden=""></div>
+         <div id="messages">
+            <div id="warning" hidden=""></div>
+            <div id="notification" hidden=""></div>
+         </div>
+         <a href="log.html#menu" id="menuLink" class="menu-link"><span></span></a>
+         <div id="menu">
+            <div class="pure-menu">
+               <a class="pure-menu-heading" href="index.html">        <img src="logo.ico" height="128"></a>
+               <ul id="menu-list" class="pure-menu-list">
+                  <li class="pure-menu-item"><a href="index.html" class="pure-menu-link">Overview</a></li>
+                  <li class="pure-menu-item"><a href="console.html" class="pure-menu-link ">WiFi Console</a></li>
+               </ul>
+               <p class="sub-menu-header">settings</p>
+               <ul id="menu-list-settings" class="pure-menu-list">
+                  <li class="pure-menu-item"><a href="wifi.html" class="pure-menu-link">WiFi</a></li>
+                  <li class="pure-menu-item"><a href="mqtt.html" class="pure-menu-link ">Connectivity</a></li>
+                  <li class="pure-menu-item pure-menu-selected"><a href="log.html" class="pure-menu-link ">Debug log</a></li>
+               </ul>
+            </div>
+         </div>
+         <div id="main">
+            <div class="header">
+               <h1 class="jl">Debug Log</h1>
+            </div>
+            <div class="content console-box">
+               <pre id="console" class="console" style="margin-top: 0px;"></pre>
+               <div class="pure-g debug">
+                  <p class="pure-u-1-1" style="vertical-align: baseline;">
+                      <a id="refresh-button" class="pure-button button-primary dbg-log" href="log.html#">Refresh</a>
+                      <a id="log-reset-button" class="dbg-btn pure-button button-primary dbg-log" href="log.html#">Wifi reboot</a>
+                      <a id="clear-console-button" class="dbg-btn pure-button button-primary dbg-log" href="log.html#">Clear Console</a>
+                  </p>
+               </div>
+            </div>
+         </div>
+      </div>
+      <script type="text/javascript">console_url ="/log/text"</script><script src="console.js"></script>
+      <script type="text/javascript">
+         onLoad(function() {
+           fetchText(100, false);
+
+           $("#refresh-button").addEventListener("click", function(e) {
+             e.preventDefault();
+             fetchText(100, false);
+           });
+
+           $("#log-reset-button").addEventListener("click", function (e) {
+               e.preventDefault();
+               var co = $("#console");
+               co.innerHTML = "";
+               ajaxSpin('POST', "/log/reset",
+                 function (resp) { showNotification("Resetting esp"); co.textEnd = 0; fetchText(2000, false); },
+                 function (s, st) { showWarning("Error resetting esp"); }
+               );
+           });
+
+           $("#clear-console-button").addEventListener("click", clearConsole);
+
+           ajaxJson('GET', "/log/dbg", function(data) { showDbgMode(data.mode); }, function() {});
+         });
+      </script>
+   </body>
+</html>
