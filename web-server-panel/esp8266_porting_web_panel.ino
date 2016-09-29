@@ -357,8 +357,7 @@ void setup() {
 
   server.on("/log/reset", HTTP_POST, [](AsyncWebServerRequest * request) {
     reboot = true;
-    tmp_request = request;
-    tmp_request->send(200, "text/plain",  "1");
+    request->send(200, "text/plain",  "1");
   });
 
   server.on("/wifi/scan", HTTP_GET, [](AsyncWebServerRequest * request) {
