@@ -255,8 +255,8 @@ IPAddress stringToIP(String address){
 
 
 
-const char* ssid = YOUR_SSID_HERE;
-const char* password = YOUR_PASSWORD_HERE;
+const char* ssid = "YOUR_SSID_HERE";
+const char* password = "YOUR_PASSWORD_HERE";
 const char* http_username = "";
 const char* http_password = "";
 
@@ -279,14 +279,19 @@ void initSerial() {
 void setup() {
   initSerial();
   SPIFFS.begin();
-  WiFi.mode(WIFI_AP_STA);
+  
+  //Enable to start in AP mode
+  WiFi.softAP("ArduinoWiFi", "");
+  
+  //Enable to start in STA mode
+  /*WiFi.mode(WIFI_STA);
   WiFi.hostname("ARDUINOWiFi");
   WiFi.begin(ssid, password);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     delay ( 5000 );
     Serial.print ( "." );
     ESP.restart();
-  }
+  }*/
 
   server.serveStatic("/fs", SPIFFS, "/");
 
