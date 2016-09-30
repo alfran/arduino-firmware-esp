@@ -27,7 +27,7 @@ int c_status = WL_IDLE_STATUS;
 char newSSID[50];
 char newPASSWORD[50];
 bool cflag = false;
-    
+
 String readS;
 int siz = 0;
 
@@ -87,7 +87,7 @@ class SPIFFSEditor: public AsyncWebHandler {
       } else if (request->method() == HTTP_GET) {
         String path = request->url();
         if (path.endsWith("/"))
-            path += "index.html";
+          path += "index.html";
         request->send(SPIFFS, path, String(), request->hasParam("download"));
       } else if (request->method() == HTTP_DELETE) {
         if (request->hasParam("path", true)) {
@@ -246,12 +246,12 @@ String toStringEncryptionType(int thisType) {
 
 
 
-IPAddress stringToIP(String address){
-  int p1 = address.indexOf('.'), p2 = address.indexOf('.', p1+1), p3 = address.indexOf('.', p2+1);//, 4p = address.indexOf(3p+1);
-  String ip1 = address.substring(0, p1), ip2 = address.substring(p1+1, p2), ip3 = address.substring(p2+1, p3), ip4 = address.substring(p3+1);
-  
+IPAddress stringToIP(String address) {
+  int p1 = address.indexOf('.'), p2 = address.indexOf('.', p1 + 1), p3 = address.indexOf('.', p2 + 1); //, 4p = address.indexOf(3p+1);
+  String ip1 = address.substring(0, p1), ip2 = address.substring(p1 + 1, p2), ip3 = address.substring(p2 + 1, p3), ip4 = address.substring(p3 + 1);
+
   return IPAddress(ip1.toInt(), ip2.toInt(), ip3.toInt(), ip4.toInt());
-  }
+}
 
 
 
@@ -279,47 +279,56 @@ void initSerial() {
 void setup() {
   initSerial();
   SPIFFS.begin();
-  
+
   //Enable to start in AP mode
-  WiFi.softAP("ArduinoWiFi", "");
-  
+  char * softApssid;
+  char buff [17];
+  WiFi.macAddress().toCharArray(buff, 17);
+  delay(500);
+  String tmp_buff =  String(buff);
+  tmp_buff.replace(":","");
+  String tmp_ssid = "Arduino-Primo-" + tmp_buff;
+  tmp_ssid.toCharArray(softApssid , tmp_ssid.length());
+  delay(500);
+  WiFi.softAP(softApssid);
+
   //Enable to start in STA mode
   /*WiFi.mode(WIFI_STA);
-  WiFi.hostname("ARDUINOWiFi");
-  WiFi.begin(ssid, password);
-  while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
+    WiFi.hostname("ARDUINOWiFi");
+    WiFi.begin(ssid, password);
+    while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     delay ( 5000 );
     Serial.print ( "." );
     ESP.restart();
-  }*/
+    }*/
 
   server.serveStatic("/fs", SPIFFS, "/");
 
   //"wifi/info" information
   server.on("/wifi/info", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String ipadd = (WiFi.getMode()==1 || WiFi.getMode()==3)? toStringIp(WiFi.localIP()) : toStringIp(WiFi.softAPIP());
-    String staticadd = dhcp.equals("on") ? "0.0.0.0": staticIP_param;
+    String ipadd = (WiFi.getMode() == 1 || WiFi.getMode() == 3) ? toStringIp(WiFi.localIP()) : toStringIp(WiFi.softAPIP());
+    String staticadd = dhcp.equals("on") ? "0.0.0.0" : staticIP_param;
     int change = WiFi.getMode() == 1 ? 3 : 1;
 
     debug_log += "[" + String(debug_counter) + "] GET wifi/info ";
-    debug_log += String( "{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\"" 
-                                          + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\""+ toStringIp(WiFi.gatewayIP()) +"\", \"netmask\":\"" + toStringIp(WiFi.subnetMask())+"\",\"rssi\":\""  
-                                          + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \""+ dhcp + "\", \"staticip\":\"" + staticadd +
-                                          + "\n" );
+    debug_log += String( "{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
+                         + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\"" + toStringIp(WiFi.gatewayIP()) + "\", \"netmask\":\"" + toStringIp(WiFi.subnetMask()) + "\",\"rssi\":\""
+                         + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \"" + dhcp + "\", \"staticip\":\"" + staticadd +
+                         + "\n" );
     debug_counter++;
-                                          
-    request->send(200, "text/plain", String("{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\"" 
-                                          + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\""+ toStringIp(WiFi.gatewayIP()) +"\", \"netmask\":\"" + toStringIp(WiFi.subnetMask())+"\",\"rssi\":\""  
-                                          + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \""+ dhcp + "\", \"staticip\":\"" + staticadd +
-                                          + "\", \"warn\": \"" + "<a href='#' class='pure-button button-primary button-larger-margin' onclick='changeWifiMode("+ change +")'>Switch to "+ toStringWifiMode(change) +" mode</a>\""
-                                          +"}" ));
+
+    request->send(200, "text/plain", String("{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
+                                            + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\"" + toStringIp(WiFi.gatewayIP()) + "\", \"netmask\":\"" + toStringIp(WiFi.subnetMask()) + "\",\"rssi\":\""
+                                            + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \"" + dhcp + "\", \"staticip\":\"" + staticadd +
+                                            + "\", \"warn\": \"" + "<a href='#' class='pure-button button-primary button-larger-margin' onclick='changeWifiMode(" + change + ")'>Switch to " + toStringWifiMode(change) + " mode</a>\""
+                                            + "}" ));
   });
 
   //"system/info" information
   server.on("/system/info", HTTP_GET, [](AsyncWebServerRequest * request) {
-    
-    request->send(200, "text/plain", String("{\"id\":\""+ String(ESP.getFlashChipId()) +"\",\"size\":\""+(ESP.getFlashChipSize()/1024/1024)+" MB\",\"baud\":\"9600\"}"));
-//    request->send(200, "text/plain", String("{\"id\":\"0x00\",\"size\":\"4MB\",\"baud\":\"9600\"}"));
+
+    request->send(200, "text/plain", String("{\"id\":\"" + String(ESP.getFlashChipId()) + "\",\"size\":\"" + (ESP.getFlashChipSize() / 1024 / 1024) + " MB\",\"baud\":\"9600\"}"));
+    //    request->send(200, "text/plain", String("{\"id\":\"0x00\",\"size\":\"4MB\",\"baud\":\"9600\"}"));
   });
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
@@ -338,7 +347,7 @@ void setup() {
     readS = "";
     siz = 0;
   });
-  
+
   server.on("/console/reset", HTTP_POST, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", "1");
     pinMode(12, OUTPUT);
@@ -353,9 +362,9 @@ void setup() {
 
   server.on("/system/update", HTTP_POST, [](AsyncWebServerRequest * request) {
     String newhostname = request->getParam("name")->value();
-//    Serial.println("New Hostname "+newhostname);
+    //    Serial.println("New Hostname "+newhostname);
     WiFi.hostname(newhostname);
-    debug_log += "["+String(debug_counter)+"] POST  Hostname updated to : " + newhostname + "\n" ;
+    debug_log += "[" + String(debug_counter) + "] POST  Hostname updated to : " + newhostname + "\n" ;
     debug_counter++;
     request->send(200, "text/plain", newhostname);
   });
@@ -366,93 +375,93 @@ void setup() {
   });
 
   server.on("/wifi/scan", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    Serial.println("wifi scan");
-    String scanResp = ""; 
+    //    Serial.println("wifi scan");
+    String scanResp = "";
 
-//      Serial.print("Scanned : "); Serial.println(tot);
+    //      Serial.print("Scanned : "); Serial.println(tot);
 
-      debug_log += String("["+String(debug_counter)+"] GET  WiFi scan : " + String(tot) + " found\n");
-      debug_counter++;
-      
-      if (tot == 0) {
-        request->send(200, "text/plain", "No networks found");
-      }
-      if (tot == -1 ) {
-        request->send(500, "text/plain", "Error during scanning");
-      }
+    debug_log += String("[" + String(debug_counter) + "] GET  WiFi scan : " + String(tot) + " found\n");
+    debug_counter++;
 
-      scanResp += "{\"result\": { \"APs\" : [ ";
-      
-      for (int netIndex = 0; netIndex < tot; netIndex++) {
-        scanResp += "{\"enc\" : \"";
-        scanResp += toStringEncryptionType (WiFi.encryptionType(netIndex));
-        scanResp += "\",";
-        scanResp += "\"essid\":\"";
-        scanResp += WiFi.SSID(netIndex);
-        scanResp += "\",";
-        scanResp += "\"rssi\" :\"";
-        scanResp += WiFi.RSSI(netIndex); 
-        scanResp += "\"}";
+    if (tot == 0) {
+      request->send(200, "text/plain", "No networks found");
+    }
+    if (tot == -1 ) {
+      request->send(500, "text/plain", "Error during scanning");
+    }
 
-        debug_log +=  String("bss" + String(netIndex) + ": " + WiFi.SSID(netIndex) + "\t( " + WiFi.RSSI(netIndex) + " )\n" );
-        if(netIndex != tot-1)
-          scanResp += ",";
-      }
+    scanResp += "{\"result\": { \"APs\" : [ ";
 
-      scanResp += "]}}";
-      request->send(200, "text/plain", scanResp);
+    for (int netIndex = 0; netIndex < tot; netIndex++) {
+      scanResp += "{\"enc\" : \"";
+      scanResp += toStringEncryptionType (WiFi.encryptionType(netIndex));
+      scanResp += "\",";
+      scanResp += "\"essid\":\"";
+      scanResp += WiFi.SSID(netIndex);
+      scanResp += "\",";
+      scanResp += "\"rssi\" :\"";
+      scanResp += WiFi.RSSI(netIndex);
+      scanResp += "\"}";
+
+      debug_log +=  String("bss" + String(netIndex) + ": " + WiFi.SSID(netIndex) + "\t( " + WiFi.RSSI(netIndex) + " )\n" );
+      if (netIndex != tot - 1)
+        scanResp += ",";
+    }
+
+    scanResp += "]}}";
+    request->send(200, "text/plain", scanResp);
   });
 
   server.on("/connect", HTTP_POST, [](AsyncWebServerRequest * request) {
-     String newSSID_param = request->getParam("essid")->value();
-     String newPASSWORD_param = request->getParam("passwd")->value();
+    String newSSID_param = request->getParam("essid")->value();
+    String newPASSWORD_param = request->getParam("passwd")->value();
 
-    newSSID_param.toCharArray(newSSID, newSSID_param.length()+1);
-    newPASSWORD_param.toCharArray(newPASSWORD, newPASSWORD_param.length()+1);
-   
+    newSSID_param.toCharArray(newSSID, newSSID_param.length() + 1);
+    newPASSWORD_param.toCharArray(newPASSWORD, newPASSWORD_param.length() + 1);
+
     cflag = true;
     delay(1000);
 
-    debug_log += String ("["+String(debug_counter)+"] POST  Connect to : " + newSSID_param + "\n" );
+    debug_log += String ("[" + String(debug_counter) + "] POST  Connect to : " + newSSID_param + "\n" );
     debug_counter++;
     request->send(200, "text/plain", "1");
   });
 
   server.on("/setmode", HTTP_POST, [](AsyncWebServerRequest * request) {
     int newMode = request->getParam("mode")->value().toInt();
-    
-    debug_log += "["+String(debug_counter)+"] POST  Mode change from " + toStringWifiMode(WiFi.getMode()) + "to " + toStringWifiMode(newMode) + "\n";
+
+    debug_log += "[" + String(debug_counter) + "] POST  Mode change from " + toStringWifiMode(WiFi.getMode()) + "to " + toStringWifiMode(newMode) + "\n";
     debug_counter++;
-     switch(newMode){
+    switch (newMode) {
       case 1 :
       case 3 :
-       request->send(200, "text/plain", String("Mode changed "+ toStringWifiMode(WiFi.getMode())));
+        request->send(200, "text/plain", String("Mode changed " + toStringWifiMode(WiFi.getMode())));
         WiFi.mode( intToWifiMode(newMode) );
-//        Serial.println("ok change mode " + toStringWifiMode(WiFi.getMode()));
+        //        Serial.println("ok change mode " + toStringWifiMode(WiFi.getMode()));
         break;
       case 2 :
-//        Serial.println("ok change mode " + toStringWifiMode(WiFi.getMode()));
-        request->send(200, "text/plain", String("Mode changed "+ toStringWifiMode(WiFi.getMode())));
+        //        Serial.println("ok change mode " + toStringWifiMode(WiFi.getMode()));
+        request->send(200, "text/plain", String("Mode changed " + toStringWifiMode(WiFi.getMode())));
         WiFi.mode( WIFI_AP );
         break;
-      }
+    }
   });
 
   server.on("/special", HTTP_POST, [](AsyncWebServerRequest * request) {
-     dhcp = request->getParam("dhcp")->value();
-     staticIP_param = request->getParam("staticip")->value();
-     netmask_param = request->getParam("netmask")->value();
-     gateway_param = request->getParam("gateway")->value();
+    dhcp = request->getParam("dhcp")->value();
+    staticIP_param = request->getParam("staticip")->value();
+    netmask_param = request->getParam("netmask")->value();
+    gateway_param = request->getParam("gateway")->value();
 
-    if(dhcp=="off"){
-      debug_log += "["+String(debug_counter)+"] POST  STATIC IP on | " + "StaticIp : " + staticIP_param + ", NetMask : " + netmask_param + ", Gateway : " + gateway_param +"\n"; 
+    if (dhcp == "off") {
+      debug_log += "[" + String(debug_counter) + "] POST  STATIC IP on | " + "StaticIp : " + staticIP_param + ", NetMask : " + netmask_param + ", Gateway : " + gateway_param + "\n";
       debug_counter++;
       conflag = true;
       delay(5000);
-      request->send(200, "text/plain", String("{\"url\":\""+staticIP_param+"\"}"));
+      request->send(200, "text/plain", String("{\"url\":\"" + staticIP_param + "\"}"));
     }
-    else{
-      debug_log += "["+String(debug_counter)+"] POST  DHCP on \n"; 
+    else {
+      debug_log += "[" + String(debug_counter) + "] POST  DHCP on \n";
       debug_counter++;
       conflag = false;
       request->send(200, "text/plain",  "1");
@@ -477,7 +486,7 @@ void setup() {
   });
 
 
-  
+
   server.addHandler(new SPIFFSEditor(http_username, http_password));
 
   server.onNotFound([](AsyncWebServerRequest * request) {
@@ -509,42 +518,42 @@ void setup() {
   server.onRequestBody([](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
 
   });
-  
+
   server.begin();
   ArduinoOTA.begin();
 }
 
-void loop() { 
+void loop() {
 
   ArduinoOTA.handle();
-  if(conflag){
+  if (conflag) {
     conflag = false;
     WiFi.config( stringToIP(staticIP_param) , stringToIP(gateway_param), stringToIP(netmask_param));
   }
 
   int cMillis = millis();
-  if(pMillis == 0 || cMillis-pMillis > intervall){
+  if (pMillis == 0 || cMillis - pMillis > intervall) {
     Serial.println("Scanning");
     tot = WiFi.scanNetworks();
     pMillis = cMillis;
   }
 
- 
-  if(cflag)
+
+  if (cflag)
   {
     WiFi.disconnect();
     WiFi.begin(newSSID, newPASSWORD);
-    while( WiFi.status() != WL_CONNECTED){
+    while ( WiFi.status() != WL_CONNECTED) {
       delay(1000);
     }
     cflag = false;
   }
 
-  if(reboot)
+  if (reboot)
   {
     reboot = false;
     ESP.restart();
-   }
+  }
 
   if (en) {
     while (Serial.available() > 0) {
@@ -552,5 +561,5 @@ void loop() {
       if (int(x) != -1)
         readS = readS + x;
     }
-  } 
+  }
 }
