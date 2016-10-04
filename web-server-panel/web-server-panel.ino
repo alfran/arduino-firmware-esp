@@ -6,6 +6,8 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+
+int WIFI_PIN = 14;
 int tot;
 
 bool en = false;
@@ -137,6 +139,7 @@ class SPIFFSEditor: public AsyncWebHandler {
 
 // SKETCH BEGIN
 AsyncWebServer server(80);
+
 
 String toStringIp(IPAddress ip) {
   String res = "";
@@ -280,18 +283,33 @@ void setup() {
   initSerial();
   SPIFFS.begin();
 
-  //Enable to start in AP mode
-  char * softApssid;
-  char buff [17];
-  WiFi.macAddress().toCharArray(buff, 17);
-  delay(500);
-  String tmp_buff =  String(buff);
-  tmp_buff.replace(":","");
-  String tmp_ssid = "Arduino-Primo-" + tmp_buff;
-  tmp_ssid.toCharArray(softApssid , tmp_ssid.length());
-  delay(500);
-  WiFi.softAP(softApssid);
+  pinMode(WIFI_PIN, OUTPUT);
 
+  //Enable to start in AP mode
+//  char * softApssid ;
+//  char buff [17];
+//  WiFi.macAddress().toCharArray(buff, 17);
+//  delay(500);
+//  char *tmp_buff =  String(buff);
+//  tmp_buff.replace(":","");
+//  String tmp_ssid = "Arduino-Primo-" + tmp_buff;
+//  tmp_ssid.toCharArray(softApssid , tmp_ssid.length());
+//  delay(1000);
+//  WiFi.softAP(tmp_ssid);
+
+   char softApssid[20];
+   byte mac[6];
+
+   WiFi.macAddress(mac);
+
+   String tmpString = String("Arduino-Primo-" +  String(mac[3], HEX)+ String(mac[4], HEX)+ String(mac[5], HEX) );
+
+   tmpString.toCharArray(softApssid, tmpString.length()+1);
+   
+   delay(1000);
+
+   WiFi.softAP(softApssid);
+  
   //Enable to start in STA mode
   /*WiFi.mode(WIFI_STA);
     WiFi.hostname("ARDUINOWiFi");
@@ -301,6 +319,7 @@ void setup() {
     Serial.print ( "." );
     ESP.restart();
     }*/
+
 
   server.serveStatic("/fs", SPIFFS, "/");
 
@@ -562,4 +581,14 @@ void loop() {
         readS = readS + x;
     }
   }
+
+  if(WiFi.softAPgetStationNum() > 0 ){
+    digitalWrite(WIFI_PIN, HIGH);
+  }
+  else{
+    digitalWrite(WIFI_PIN,LOW);
+  }
+
+
+
 }
