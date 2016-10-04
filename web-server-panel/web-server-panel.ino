@@ -286,28 +286,12 @@ void setup() {
   pinMode(WIFI_PIN, OUTPUT);
 
   //Enable to start in AP mode
-//  char * softApssid ;
-//  char buff [17];
-//  WiFi.macAddress().toCharArray(buff, 17);
-//  delay(500);
-//  char *tmp_buff =  String(buff);
-//  tmp_buff.replace(":","");
-//  String tmp_ssid = "Arduino-Primo-" + tmp_buff;
-//  tmp_ssid.toCharArray(softApssid , tmp_ssid.length());
-//  delay(1000);
-//  WiFi.softAP(tmp_ssid);
-
    char softApssid[20];
    byte mac[6];
-
    WiFi.macAddress(mac);
-
    String tmpString = String("Arduino-Primo-" +  String(mac[3], HEX)+ String(mac[4], HEX)+ String(mac[5], HEX) );
-
    tmpString.toCharArray(softApssid, tmpString.length()+1);
-   
    delay(1000);
-
    WiFi.softAP(softApssid);
   
   //Enable to start in STA mode
