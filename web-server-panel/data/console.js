@@ -159,8 +159,8 @@ function consoleSendInit() {
                 }
                 c(h.value);
                 h.value = "";
-                //ajaxSpin("POST", "/console/send?text=" + encodeURIComponent(j), function(k) {
-                ajaxSpin("POST", "/console/send/" + encodeURIComponent(j), function(k) {
+                ajaxSpin("POST", "/console/send?text=" + encodeURIComponent(j), function(k) {
+                //ajaxSpin("POST", "/console/send/" + encodeURIComponent(j), function(k) {
                     showNotification("Text sent")
                 }, function(l, k) {
                     showWarning("Error sending text")

@@ -6,6 +6,14 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+const char* ssid = "YOUR_SSID_HERE";
+const char* password = "YOUR_PASSWORD_HERE";
+const char* http_username = "";
+const char* http_password = "";
+char softApssid[20];
+
+extern "C" void system_set_os_print(uint8 onoff);
+extern "C" void ets_install_putc1(void* routine);
 
 int WIFI_PIN = 14;
 int tot;
@@ -256,17 +264,6 @@ IPAddress stringToIP(String address) {
   return IPAddress(ip1.toInt(), ip2.toInt(), ip3.toInt(), ip4.toInt());
 }
 
-
-
-const char* ssid = "YOUR_SSID_HERE";
-const char* password = "YOUR_PASSWORD_HERE";
-const char* http_username = "";
-const char* http_password = "";
-
-
-extern "C" void system_set_os_print(uint8 onoff);
-extern "C" void ets_install_putc1(void* routine);
-
 //Use the internal hardware buffer
 static void _u0_putc(char c) {
   while (((U0S >> USTXC) & 0x7F) == 0x7F);
@@ -286,24 +283,24 @@ void setup() {
   pinMode(WIFI_PIN, OUTPUT);
 
   //Enable to start in AP mode
-   char softApssid[20];
+   /*
    byte mac[6];
    WiFi.macAddress(mac);
-   String tmpString = String("Arduino-Primo-" +  String(mac[3], HEX)+ String(mac[4], HEX)+ String(mac[5], HEX) );
+   String tmpString = String("Arduino-Primo-" +  String(mac[3], HEX) + String(mac[4], HEX) + String(mac[5], HEX) );
    tmpString.toCharArray(softApssid, tmpString.length()+1);
    delay(1000);
    WiFi.softAP(softApssid);
+   */
   
-  //Enable to start in STA mode
-  /*WiFi.mode(WIFI_STA);
-    WiFi.hostname("ARDUINOWiFi");
+  //Enable to start in STA mode    
+    WiFi.mode(WIFI_STA);
+    WiFi.hostname("Arduino-Primo");
     WiFi.begin(ssid, password);
     while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
-    delay ( 5000 );
-    Serial.print ( "." );
-    ESP.restart();
-    }*/
-
+      delay ( 5000 );
+      Serial.print ( "." );
+      ESP.restart();
+    }
 
   server.serveStatic("/fs", SPIFFS, "/");
 
@@ -312,15 +309,16 @@ void setup() {
     String ipadd = (WiFi.getMode() == 1 || WiFi.getMode() == 3) ? toStringIp(WiFi.localIP()) : toStringIp(WiFi.softAPIP());
     String staticadd = dhcp.equals("on") ? "0.0.0.0" : staticIP_param;
     int change = WiFi.getMode() == 1 ? 3 : 1;
+    String cur_ssid = (String(softApssid).length() > 0 || WiFi.getMode() == 2 )? softApssid : WiFi.SSID();
 
     debug_log += "[" + String(debug_counter) + "] GET wifi/info ";
-    debug_log += String( "{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
+    debug_log += String( "{\"ssid\":\"" + cur_ssid + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
                          + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\"" + toStringIp(WiFi.gatewayIP()) + "\", \"netmask\":\"" + toStringIp(WiFi.subnetMask()) + "\",\"rssi\":\""
                          + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \"" + dhcp + "\", \"staticip\":\"" + staticadd +
                          + "\n" );
     debug_counter++;
 
-    request->send(200, "text/plain", String("{\"ssid\":\"" + WiFi.SSID() + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
+    request->send(200, "text/plain", String("{\"ssid\":\"" + cur_ssid + "\",\"hostname\":\"" + WiFi.hostname() + "\",\"ip\":\"" + ipadd + "\",\"mode\":\"" + toStringWifiMode(WiFi.getMode()) + "\",\"chan\":\""
                                             + WiFi.channel() + "\",\"status\":\"" + toStringWifiStatus(WiFi.status()) + "\", \"gateway\":\"" + toStringIp(WiFi.gatewayIP()) + "\", \"netmask\":\"" + toStringIp(WiFi.subnetMask()) + "\",\"rssi\":\""
                                             + WiFi.RSSI() + "\",\"mac\":\"" + WiFi.macAddress() + "\",\"phy\":\"" + WiFi.getPhyMode() + "\", \"dhcp\": \"" + dhcp + "\", \"staticip\":\"" + staticadd +
                                             + "\", \"warn\": \"" + "<a href='#' class='pure-button button-primary button-larger-margin' onclick='changeWifiMode(" + change + ")'>Switch to " + toStringWifiMode(change) + " mode</a>\""
