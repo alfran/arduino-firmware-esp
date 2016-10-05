@@ -1,4 +1,6 @@
 #include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
+
 
 int interval = 30000;
 bool en = false;
@@ -19,6 +21,7 @@ char newPASSWORD[50];
 
 
 void initArduinoOTA(){
+  ArduinoOTA.setHostname(host_name);
   ArduinoOTA.begin();
 }
 
@@ -60,5 +63,6 @@ void manageOTA(){
         readS = readS + x;
     }
   }   
+  yield();
 }
 
