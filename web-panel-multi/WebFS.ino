@@ -1,37 +1,13 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-#include <ArduinoOTA.h>
 #include <FS.h>
 #include <Hash.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-int tot;
-
-bool en = false;
-bool conflag = false;
-String staticIP_param ;
-String netmask_param;
-String gateway_param;
-String dhcp = "on";
-
-int pMillis = 0;
-int intervall = 30000;
-
+AsyncWebServer server(80);
 String debug_log = "";
 int debug_counter = 0;
-
-bool reboot = false;
-
-int c_status = WL_IDLE_STATUS;
-char newSSID[50];
-char newPASSWORD[50];
-bool cflag = false;
-    
-String readS;
 int siz = 0;
 
-// WEB HANDLER IMPLEMENTATION
 class SPIFFSEditor: public AsyncWebHandler {
   private:
     String _username;
@@ -135,160 +111,10 @@ class SPIFFSEditor: public AsyncWebHandler {
 };
 
 
-// SKETCH BEGIN
-AsyncWebServer server(80);
-
-String toStringIp(IPAddress ip) {
-  String res = "";
-  for (int i = 0; i < 3; i++) {
-    res += String((ip >> (8 * i)) & 0xFF) + ".";
-  }
-  res += String(((ip >> 8 * 3)) & 0xFF);
-  return res;
-}
-
-String toStringWifiMode(int mod) {
-  String mode;
-  switch (mod) {
-    case 0:
-      mode = "OFF";
-      break;
-    case 1:
-      mode = "STA";
-      break;
-    case 2:
-      mode = "AP";
-      break;
-    case 3:
-      mode = "AP+STA";
-      // statements
-      break;
-    case 4:
-      mode = "----";
-      break;
-    default:
-      // statements
-      break;
-  }
-  return mode;
-}
-
-WiFiMode intToWifiMode(int mod) {
-  WiFiMode mode;
-  switch (mod) {
-    case 0:
-      mode = WIFI_OFF;
-      break;
-    case 1:
-      mode = WIFI_STA;
-      break;
-    case 2:
-      mode = WIFI_AP;
-      break;
-    case 3:
-      mode = WIFI_AP_STA;
-      break;
-    case 4:
-      break;
-    default:
-      break;
-  }
-  return mode;
-}
-
-String toStringWifiStatus(int state) {
-  String status;
-  switch (state) {
-    case 0:
-      status = "connecting";
-      break;
-    case 1:
-      status = "unknown status";
-      break;
-    case 2:
-      status = "wifi scan completed";
-      break;
-    case 3:
-      status = "got IP address";
-      // statements
-      break;
-    case 4:
-      status = "connection failed";
-      break;
-    default:
-      // statements
-      break;
-  }
-  return status;
-}
-
-String toStringEncryptionType(int thisType) {
-  String eType;
-  switch (thisType) {
-    case ENC_TYPE_WEP:
-      eType = "WEP";
-      break;
-    case ENC_TYPE_TKIP:
-      eType = "WPA";
-      break;
-    case ENC_TYPE_CCMP:
-      eType = "WPA2";
-      break;
-    case ENC_TYPE_NONE:
-      eType = "None";
-      break;
-    case ENC_TYPE_AUTO:
-      eType = "Auto";
-      break;
-  }
-  return eType;
-}
-
-
-
-IPAddress stringToIP(String address){
-  int p1 = address.indexOf('.'), p2 = address.indexOf('.', p1+1), p3 = address.indexOf('.', p2+1);//, 4p = address.indexOf(3p+1);
-  String ip1 = address.substring(0, p1), ip2 = address.substring(p1+1, p2), ip3 = address.substring(p2+1, p3), ip4 = address.substring(p3+1);
-  
-  return IPAddress(ip1.toInt(), ip2.toInt(), ip3.toInt(), ip4.toInt());
-  }
-
-
-
-const char* ssid = YOUR_SSID_HERE;
-const char* password = YOUR_PASSWORD_HERE;
-const char* http_username = "";
-const char* http_password = "";
-
-
-extern "C" void system_set_os_print(uint8 onoff);
-extern "C" void ets_install_putc1(void* routine);
-
-//Use the internal hardware buffer
-static void _u0_putc(char c) {
-  while (((U0S >> USTXC) & 0x7F) == 0x7F);
-  U0F = c;
-}
-
-void initSerial() {
-  Serial.begin(9600);
-  ets_install_putc1((void *) &_u0_putc);
-  system_set_os_print(1);
-}
-
-void setup() {
-  initSerial();
+void initWebFS(){
   SPIFFS.begin();
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.hostname("ARDUINOWiFi");
-  WiFi.begin(ssid, password);
-  while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
-    delay ( 5000 );
-    Serial.print ( "." );
-    ESP.restart();
-  }
-
   server.serveStatic("/fs", SPIFFS, "/");
+  server.begin();
 
   //"wifi/info" information
   server.on("/wifi/info", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -357,8 +183,8 @@ void setup() {
 
   server.on("/log/reset", HTTP_POST, [](AsyncWebServerRequest * request) {
     reboot = true;
-    tmp_request = request;
-    tmp_request->send(200, "text/plain",  "1");
+//    tmp_request = request;
+    request->send(200, "text/plain",  "1");
   });
 
   server.on("/wifi/scan", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -505,48 +331,9 @@ void setup() {
   server.onRequestBody([](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
 
   });
-  
-  server.begin();
-  ArduinoOTA.begin();
+
+
 }
 
-void loop() { 
 
-  ArduinoOTA.handle();
-  if(conflag){
-    conflag = false;
-    WiFi.config( stringToIP(staticIP_param) , stringToIP(gateway_param), stringToIP(netmask_param));
-  }
 
-  int cMillis = millis();
-  if(pMillis == 0 || cMillis-pMillis > intervall){
-    Serial.println("Scanning");
-    tot = WiFi.scanNetworks();
-    pMillis = cMillis;
-  }
-
- 
-  if(cflag)
-  {
-    WiFi.disconnect();
-    WiFi.begin(newSSID, newPASSWORD);
-    while( WiFi.status() != WL_CONNECTED){
-      delay(1000);
-    }
-    cflag = false;
-  }
-
-  if(reboot)
-  {
-    reboot = false;
-    ESP.restart();
-   }
-
-  if (en) {
-    while (Serial.available() > 0) {
-      char x = Serial.read();
-      if (int(x) != -1)
-        readS = readS + x;
-    }
-  } 
-}
