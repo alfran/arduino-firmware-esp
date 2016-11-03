@@ -25,6 +25,7 @@ CommItf::CommItf(){
 
 	//TEST
 	 McuType = STM32;
+	 McuType = AVR328P;
 
 	 switch(int(McuType)){
 	 	case AVR328P:
@@ -136,10 +137,12 @@ void CommItf::write(tMsgPacket *_pckt){
 		Serial.write(_pckt->tcmd);
 		Serial.write(_pckt->nParam);
 		for(int i=0; i<(int)_pckt->nParam; i++){
-			Serial.write(_pckt->params[i].paramLen);
-			for(int j=0; j< (int)_pckt->params[i].paramLen; j++)
-				Serial.write( _pckt->params[i].param[j]);
-		}
+		 	Serial.write(_pckt->params[i].paramLen);
+		// 	for(int j=0; j< (int)_pckt->params[i].paramLen; j++)
+		// 		Serial.write( _pckt->params[i].param[j]);
+			Serial.write( _pckt->params[i].param, _pckt->params[i].paramLen);
+		 }
+
 		Serial.write(END_CMD);
 	}
 	else if(CommChannel == CH_SPI){
